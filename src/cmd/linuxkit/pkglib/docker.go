@@ -23,6 +23,7 @@ import (
 	"github.com/containerd/containerd/content"
 	"github.com/containerd/containerd/reference"
 	"github.com/docker/buildx/util/progress"
+	"github.com/docker/cli/cli/config"
 	"github.com/docker/docker/api/types"
 	versioncompare "github.com/hashicorp/go-version"
 	"github.com/linuxkit/linuxkit/src/cmd/linuxkit/registry"
@@ -38,6 +39,7 @@ import (
 	"github.com/moby/buildkit/frontend/dockerfile/instructions"
 	"github.com/moby/buildkit/frontend/dockerfile/parser"
 	"github.com/moby/buildkit/frontend/dockerfile/shell"
+	"github.com/moby/buildkit/session/auth/authprovider"
 	"github.com/moby/buildkit/session/upload/uploadprovider"
 	log "github.com/sirupsen/logrus"
 )
@@ -453,6 +455,10 @@ func (dr *dockerRunnerImpl) build(ctx context.Context, tag, pkg, dockerContext, 
 			},
 		},
 	}
+
+	dockerConfig := config.LoadDefaultConfigFile(os.Stderr)
+	dockerAuth := authprovider.NewDockerAuthProvider(dockerConfig)
+	solveOpts.Session = append(solveOpts.Session, dockerAuth)
 
 	if stdin != nil {
 		buf := bufio.NewReader(stdin)
